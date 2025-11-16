@@ -7,7 +7,7 @@
 <style>
   :root {
     --bg: #0f1113;
-    --panel: #141618;
+    --panel: #21262b;
     --muted: #9aa3ad;
     --accent: #6fb8ff;
     --accent-2: #9ed1ff;
@@ -18,7 +18,7 @@
   html, body{height:100%; margin:0;}
   body{
     font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-    background: linear-gradient(180deg, #323538 0%, #101214 100%);
+    background: rgb(22, 22, 22);
     color: #e6eef6;
     padding: 22px;
     -webkit-font-smoothing: antialiased;
@@ -35,8 +35,15 @@
     margin-bottom: 18px;
   }
 
-  h1{margin:0; font-size:20px; letter-spacing:0.2px;}
-  .controls{font-size:13px; color: var(--muted);}
+  h1{
+    margin:0; 
+    font-size:30px; 
+    letter-spacing:0.2px;}
+    
+  .controls{
+    font-size:13px; 
+    color: var(--muted);
+  }
 
   .grid {
     display:grid;
@@ -47,7 +54,7 @@
 
   .card {
     display: block;
-    background: var(--bg);
+    background: var(--panel);
     border: 1px solid var(--card-border);
     padding: 14px 16px;
     border-radius: 10px;
@@ -112,7 +119,12 @@
     color: var(--muted);
   }
 
-  .tag { background: rgba(111,184,255,0.08); color: var(--accent); }
+  .tag { 
+    background: rgba(111,184,255,0.08); 
+    color: var(--accent); 
+    padding: 8px;
+    border-radius: 10px;
+  }
 
   .card:focus { outline: 2px solid rgba(111,184,255,0.16); outline-offset:3px; }
 
