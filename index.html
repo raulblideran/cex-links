@@ -10,12 +10,12 @@
                 theme: {
                     extend: {
                         colors: {
-                            primary: '#00d9ff',
-                            success: '#00ff88',
-                        }
-                    }
-                }
-            }
+                            primary: "#00d9ff",
+                            success: "#00ff88",
+                        },
+                    },
+                },
+            };
         </script>
         <style>
             body {
@@ -28,7 +28,6 @@
         <div class="px-6 py-8">
             <!-- Simple compact header -->
             <div class="mb-8 flex items-center justify-center gap-4">
-                <img src="./cex.png" alt="CeX Logo" class="h-12 w-auto" />
                 <input
                     type="text"
                     id="storeSearch"
@@ -42,21 +41,45 @@
                 >
                     Sort by Distance
                 </button>
-                <div id="storeDropdown" class="hidden absolute top-full mt-2 bg-slate-800 border border-cyan-500/30 rounded-xl shadow-2xl max-h-80 overflow-y-auto z-50 w-96"></div>
+                <div
+                    id="storeDropdown"
+                    class="hidden absolute top-full mt-2 bg-slate-800 border border-cyan-500/30 rounded-xl shadow-2xl max-h-80 overflow-y-auto z-50 w-96"
+                ></div>
             </div>
 
             <!-- Grid of cards -->
-            <div id="grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-6"></div>
+            <div
+                id="grid"
+                class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-10 gap-6"
+            ></div>
         </div>
 
         <!-- Modal -->
-        <div id="modalOverlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-slate-800 rounded-2xl border border-cyan-500/30 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-                <div class="flex items-center justify-between p-6 border-b border-slate-700">
-                    <h2 id="modalTitle" class="text-xl font-bold text-white"></h2>
-                    <button id="modalClose" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center text-2xl">×</button>
+        <div
+            id="modalOverlay"
+            class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+            <div
+                class="bg-slate-800 rounded-2xl border border-cyan-500/30 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            >
+                <div
+                    class="flex items-center justify-between p-6 border-b border-slate-700"
+                >
+                    <h2
+                        id="modalTitle"
+                        class="text-xl font-bold text-white"
+                    ></h2>
+                    <button
+                        id="modalClose"
+                        class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center text-2xl"
+                    >
+                        ×
+                    </button>
                 </div>
-                <div id="modalBody" class="p-6 overflow-y-auto max-h-[60vh]"></div>
+                <div
+                    id="modalBody"
+                    class="p-6 overflow-y-auto max-h-[60vh]"
+                ></div>
             </div>
         </div>
 
@@ -102,7 +125,9 @@
             function getSearchTitle(url) {
                 const match = url.match(/stext=([^&]+)/);
                 if (match) {
-                    const searchTerm = decodeURIComponent(match[1].replace(/\+/g, ' '));
+                    const searchTerm = decodeURIComponent(
+                        match[1].replace(/\+/g, " "),
+                    );
                     return `Search: ${searchTerm}`;
                 }
                 return "Search";
@@ -129,7 +154,9 @@
                     if (!resp.ok) return [];
                     const json = await resp.json();
                     const stores = json?.response?.data?.stores ?? [];
-                    return stores.sort((a, b) => a.storeName.localeCompare(b.storeName));
+                    return stores.sort((a, b) =>
+                        a.storeName.localeCompare(b.storeName),
+                    );
                 } catch (e) {
                     console.error("Error fetching stores", e);
                     return [];
@@ -154,7 +181,11 @@
                     const json = await resp.json();
                     return json?.response?.data?.nearestStores ?? [];
                 } catch (e) {
-                    console.error("Error fetching nearest stores for SKU", sku, e);
+                    console.error(
+                        "Error fetching nearest stores for SKU",
+                        sku,
+                        e,
+                    );
                     return [];
                 }
             }
@@ -184,11 +215,14 @@
 
                 stores.forEach((store) => {
                     const storeItem = document.createElement("div");
-                    storeItem.className = "p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors";
+                    storeItem.className =
+                        "p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors";
 
                     const storeName = document.createElement("div");
                     // Highlight in yellow if it matches the selected store
-                    const isSelectedStore = selectedStore && store.storeName === selectedStore.storeName;
+                    const isSelectedStore =
+                        selectedStore &&
+                        store.storeName === selectedStore.storeName;
                     storeName.className = isSelectedStore
                         ? "font-semibold text-yellow-400 mb-2"
                         : "font-semibold text-white mb-2";
@@ -251,7 +285,10 @@
 
             function savePreferences(type, data) {
                 const prefs = { type, ...data };
-                localStorage.setItem("cexStorePreference", JSON.stringify(prefs));
+                localStorage.setItem(
+                    "cexStorePreference",
+                    JSON.stringify(prefs),
+                );
             }
 
             function renderStoreDropdown(filterText = "") {
@@ -259,12 +296,15 @@
                 dropdown.innerHTML = "";
 
                 const filtered = allStores.filter((store) =>
-                    store.storeName.toLowerCase().includes(filterText.toLowerCase())
+                    store.storeName
+                        .toLowerCase()
+                        .includes(filterText.toLowerCase()),
                 );
 
                 if (filtered.length === 0) {
                     const noResults = document.createElement("div");
-                    noResults.className = "p-3 text-center text-gray-400 text-sm";
+                    noResults.className =
+                        "p-3 text-center text-gray-400 text-sm";
                     noResults.textContent = "No stores found";
                     dropdown.appendChild(noResults);
                     return;
@@ -272,9 +312,13 @@
 
                 filtered.forEach((store) => {
                     const option = document.createElement("div");
-                    option.className = "px-4 py-3 cursor-pointer hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors text-sm font-medium";
+                    option.className =
+                        "px-4 py-3 cursor-pointer hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors text-sm font-medium";
 
-                    if (selectedStore && selectedStore.storeId === store.storeId) {
+                    if (
+                        selectedStore &&
+                        selectedStore.storeId === store.storeId
+                    ) {
                         option.className += " bg-green-500/10 text-green-400";
                     }
 
@@ -283,8 +327,11 @@
 
                     option.addEventListener("click", async () => {
                         selectedStore = store;
-                        document.getElementById("storeSearch").value = store.storeName;
-                        document.getElementById("storeDropdown").classList.add("hidden");
+                        document.getElementById("storeSearch").value =
+                            store.storeName;
+                        document
+                            .getElementById("storeDropdown")
+                            .classList.add("hidden");
                         savePreferences("store", { storeId: store.storeId });
                         await reloadProducts();
                     });
@@ -302,7 +349,7 @@
                 const prefs = loadPreferences();
                 if (prefs && prefs.type === "store") {
                     selectedStore = allStores.find(
-                        (s) => s.storeId === prefs.storeId
+                        (s) => s.storeId === prefs.storeId,
                     );
                     if (selectedStore) {
                         searchInput.value = selectedStore.storeName;
@@ -313,23 +360,31 @@
                     selectedIndex = -1;
                     renderStoreDropdown(e.target.value);
                     dropdown.classList.remove("hidden");
-                    dropdown.style.width = searchInput.offsetWidth + 'px';
+                    dropdown.style.width = searchInput.offsetWidth + "px";
                 });
 
                 searchInput.addEventListener("focus", () => {
                     renderStoreDropdown(searchInput.value);
                     dropdown.classList.remove("hidden");
-                    dropdown.style.width = searchInput.offsetWidth + 'px';
-                    dropdown.style.left = searchInput.offsetLeft + 'px';
-                    dropdown.style.top = (searchInput.offsetTop + searchInput.offsetHeight + 8) + 'px';
+                    dropdown.style.width = searchInput.offsetWidth + "px";
+                    dropdown.style.left = searchInput.offsetLeft + "px";
+                    dropdown.style.top =
+                        searchInput.offsetTop +
+                        searchInput.offsetHeight +
+                        8 +
+                        "px";
                 });
 
                 searchInput.addEventListener("keydown", (e) => {
-                    const options = dropdown.querySelectorAll("div[data-store-id]");
+                    const options =
+                        dropdown.querySelectorAll("div[data-store-id]");
 
                     if (e.key === "ArrowDown") {
                         e.preventDefault();
-                        selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
+                        selectedIndex = Math.min(
+                            selectedIndex + 1,
+                            options.length - 1,
+                        );
                         updateSelectedOption(options, selectedIndex);
                     } else if (e.key === "ArrowUp") {
                         e.preventDefault();
@@ -356,7 +411,10 @@
                 }
 
                 document.addEventListener("click", (e) => {
-                    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    if (
+                        !searchInput.contains(e.target) &&
+                        !dropdown.contains(e.target)
+                    ) {
                         dropdown.classList.add("hidden");
                     }
                 });
@@ -377,14 +435,25 @@
                     const sku = extractSkuFromUrl(url);
                     const isSearch = isSearchUrl(url);
 
-                    const detail = isSearch ? null : await fetchProductDetails(sku);
-                    const stores = isSearch ? [] : await fetchNearestStores(sku);
+                    const detail = isSearch
+                        ? null
+                        : await fetchProductDetails(sku);
+                    const stores = isSearch
+                        ? []
+                        : await fetchNearestStores(sku);
 
                     const imgUrl = detail?.imageUrls?.medium;
-                    const title = isSearch ? getSearchTitle(url) : (detail?.boxName ?? `Product ${sku}`);
-                    const category = detail?.categoryName?.replace(/-/g, ' ') ?? (isSearch ? 'SEARCH' : 'PRODUCT');
+                    const title = isSearch
+                        ? getSearchTitle(url)
+                        : (detail?.boxName ?? `Product ${sku}`);
+                    const category =
+                        detail?.categoryName?.replace(/-/g, " ") ??
+                        (isSearch ? "SEARCH" : "PRODUCT");
                     const price = detail?.sellPrice;
-                    const nearestDistance = stores && stores.length > 0 ? stores[0].distance : Infinity;
+                    const nearestDistance =
+                        stores && stores.length > 0
+                            ? stores[0].distance
+                            : Infinity;
 
                     productsData.push({
                         url,
@@ -396,33 +465,41 @@
                         title,
                         category,
                         price,
-                        nearestDistance
+                        nearestDistance,
                     });
                 }
 
                 // Sort if enabled
                 if (sortByDistance) {
-                    productsData.sort((a, b) => a.nearestDistance - b.nearestDistance);
+                    productsData.sort(
+                        (a, b) => a.nearestDistance - b.nearestDistance,
+                    );
                 }
 
                 // Render all products
                 for (const productData of productsData) {
-                    const { url, stores, imgUrl, title, category, price } = productData;
+                    const { url, stores, imgUrl, title, category, price } =
+                        productData;
 
                     // Create card with Tailwind classes
                     const card = document.createElement("a");
                     card.href = url;
                     card.target = "_blank";
                     card.rel = "noopener";
-                    card.className = "group block bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/20 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300";
+                    card.className =
+                        "group block bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/20 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300";
 
                     // Image section
                     const imageDiv = document.createElement("div");
-                    imageDiv.className = "relative h-64 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center overflow-hidden";
+                    imageDiv.className =
+                        "relative h-64 bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center overflow-hidden";
 
                     const img = document.createElement("img");
-                    img.src = imgUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23475569'%3E📦%3C/text%3E%3C/svg%3E";
-                    img.className = "max-w-[90%] max-h-[90%] object-contain drop-shadow-2xl";
+                    img.src =
+                        imgUrl ||
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='%23475569'%3E📦%3C/text%3E%3C/svg%3E";
+                    img.className =
+                        "max-w-[90%] max-h-[90%] object-contain drop-shadow-2xl";
                     imageDiv.appendChild(img);
 
                     card.appendChild(imageDiv);
@@ -433,16 +510,19 @@
 
                     // Category and price row
                     const topRow = document.createElement("div");
-                    topRow.className = "flex items-center justify-between gap-2 mb-2";
+                    topRow.className =
+                        "flex items-center justify-between gap-2 mb-2";
 
                     const badge = document.createElement("div");
-                    badge.className = "inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-900 px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider";
+                    badge.className =
+                        "inline-block bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-900 px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider";
                     badge.textContent = category;
                     topRow.appendChild(badge);
 
                     if (price) {
                         const priceTag = document.createElement("div");
-                        priceTag.className = "bg-red-900 text-white px-2 py-0.5 rounded-md text-xs font-bold";
+                        priceTag.className =
+                            "bg-red-900 text-white px-2 py-0.5 rounded-md text-xs font-bold";
                         priceTag.textContent = `£${price}`;
                         topRow.appendChild(priceTag);
                     }
@@ -451,14 +531,16 @@
 
                     // Title
                     const titleEl = document.createElement("div");
-                    titleEl.className = "text-white font-bold text-sm mb-2 line-clamp-2 leading-snug";
+                    titleEl.className =
+                        "text-white font-bold text-sm mb-2 line-clamp-2 leading-snug";
                     titleEl.textContent = title;
                     bodyDiv.appendChild(titleEl);
 
                     // Store info
                     if (stores && stores.length > 0) {
                         const storeDiv = document.createElement("div");
-                        storeDiv.className = "pt-2 border-t border-slate-700/50 flex items-center justify-between gap-2";
+                        storeDiv.className =
+                            "pt-2 border-t border-slate-700/50 flex items-center justify-between gap-2";
 
                         const nearestStore = stores[0];
                         const infoDiv = document.createElement("div");
@@ -466,7 +548,9 @@
 
                         const storeName = document.createElement("div");
                         // Highlight in yellow if it matches the selected store
-                        const isSelectedStore = selectedStore && nearestStore.storeName === selectedStore.storeName;
+                        const isSelectedStore =
+                            selectedStore &&
+                            nearestStore.storeName === selectedStore.storeName;
                         storeName.className = isSelectedStore
                             ? "text-yellow-400 font-semibold text-xs truncate"
                             : "text-green-400 font-semibold text-xs truncate";
@@ -483,7 +567,8 @@
 
                         if (stores.length > 1) {
                             const btn = document.createElement("button");
-                            btn.className = "px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500 text-cyan-400 rounded-md text-[10px] font-semibold transition-all flex-shrink-0";
+                            btn.className =
+                                "px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500 text-cyan-400 rounded-md text-[10px] font-semibold transition-all flex-shrink-0";
                             btn.textContent = `+${stores.length - 1}`;
                             btn.onclick = (e) => {
                                 e.preventDefault();
@@ -497,7 +582,8 @@
                     } else {
                         // Not in stock
                         const notInStock = document.createElement("div");
-                        notInStock.className = "pt-2 border-t border-slate-700/50 text-red-400 font-semibold text-xs text-center";
+                        notInStock.className =
+                            "pt-2 border-t border-slate-700/50 text-red-400 font-semibold text-xs text-center";
                         notInStock.textContent = "Not in stock";
                         bodyDiv.appendChild(notInStock);
                     }
@@ -518,10 +604,16 @@
 
                     if (sortByDistance) {
                         sortBtn.textContent = "Default Order";
-                        sortBtn.classList.add("bg-cyan-500/20", "border-cyan-500");
+                        sortBtn.classList.add(
+                            "bg-cyan-500/20",
+                            "border-cyan-500",
+                        );
                     } else {
                         sortBtn.textContent = "Sort by Distance";
-                        sortBtn.classList.remove("bg-cyan-500/20", "border-cyan-500");
+                        sortBtn.classList.remove(
+                            "bg-cyan-500/20",
+                            "border-cyan-500",
+                        );
                     }
 
                     await reloadProducts();
