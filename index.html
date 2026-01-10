@@ -50,7 +50,7 @@
             <!-- Grid of cards -->
             <div
                 id="grid"
-                class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-10 gap-6"
+                class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-10 gap-6"
             ></div>
         </div>
 
@@ -80,6 +80,28 @@
                     id="modalBody"
                     class="p-6 overflow-y-auto max-h-[60vh]"
                 ></div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div
+            id="loadingOverlay"
+            class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-300"
+        >
+            <div class="relative">
+                <div
+                    class="w-20 h-20 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"
+                ></div>
+                <div
+                    class="absolute inset-0 w-20 h-20 border-4 border-transparent border-r-blue-500 rounded-full animate-spin"
+                    style="
+                        animation-duration: 1.5s;
+                        animation-direction: reverse;
+                    "
+                ></div>
+            </div>
+            <div class="mt-6 text-cyan-400 font-semibold text-lg animate-pulse">
+                Loading CeX Products...
             </div>
         </div>
 
@@ -200,6 +222,21 @@
 
             function kmToMiles(km) {
                 return km * 0.621371;
+            }
+
+            function showLoading() {
+                const loadingOverlay =
+                    document.getElementById("loadingOverlay");
+                loadingOverlay.classList.remove("hidden", "opacity-0");
+            }
+
+            function hideLoading() {
+                const loadingOverlay =
+                    document.getElementById("loadingOverlay");
+                loadingOverlay.classList.add("opacity-0");
+                setTimeout(() => {
+                    loadingOverlay.classList.add("hidden");
+                }, 300);
             }
 
             function showStoresModal(productTitle, stores) {
@@ -354,6 +391,16 @@
                     if (selectedStore) {
                         searchInput.value = selectedStore.storeName;
                     }
+                } else {
+                    // Set default to Doncaster
+                    selectedStore = allStores.find(
+                        (s) => s.storeName === "Doncaster",
+                    );
+                    if (selectedStore) {
+                        searchInput.value = selectedStore.storeName;
+                    } else {
+                        searchInput.value = "Doncaster";
+                    }
                 }
 
                 searchInput.addEventListener("input", (e) => {
@@ -421,9 +468,11 @@
             }
 
             async function reloadProducts() {
+                showLoading();
                 const grid = document.getElementById("grid");
                 grid.innerHTML = "";
                 await loadProducts();
+                hideLoading();
             }
 
             async function loadProducts() {
@@ -596,6 +645,9 @@
             async function init() {
                 await initStoreSelector();
                 await loadProducts();
+
+                // Hide loading overlay
+                hideLoading();
 
                 // Setup sort button
                 const sortBtn = document.getElementById("sortBtn");
