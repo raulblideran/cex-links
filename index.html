@@ -158,7 +158,7 @@
             async function fetchProductDetails(sku) {
                 if (!sku) return null;
                 try {
-                    const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`)}`;
+                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`;
                     const resp = await fetch(apiUrl);
                     if (!resp.ok) return null;
                     const json = await resp.json();
@@ -171,7 +171,7 @@
 
             async function fetchAllStores() {
                 try {
-                    const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://wss2.cex.uk.webuy.io/v3/stores`)}`;
+                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/stores`;
                     const resp = await fetch(apiUrl);
                     if (!resp.ok) return [];
                     const json = await resp.json();
@@ -197,7 +197,7 @@
                         lon = -1.13534;
                     }
 
-                    const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`)}`;
+                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`;
                     const resp = await fetch(apiUrl);
                     if (!resp.ok) return null;
                     const json = await resp.json();
