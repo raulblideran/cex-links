@@ -123,13 +123,13 @@
                 "https://uk.webuy.com/product-detail?id=5030930048341",
                 "https://uk.webuy.com/product-detail?id=5053083202743",
                 "https://uk.webuy.com/product-detail?id=5050582805895",
-                "https://uk.webuy.com/product-detail?id=8717418365899",
-                "https://uk.webuy.com/product-detail?id=5051892228855",
                 "https://uk.webuy.com/product-detail/?id=5055761916881",
                 "https://uk.webuy.com/product-detail/?id=5060952890550",
                 "https://uk.webuy.com/product-detail/?id=5060952890567",
                 "https://uk.webuy.com/product-detail/?id=5050629857436",
                 "https://uk.webuy.com/product-detail/?id=5055761913071",
+                "https://uk.webuy.com/product-detail/?id=5099720241997",
+                "https://uk.webuy.com/product-detail/?id=SSEGMASG245AB",
             ];
 
             function extractSkuFromUrl(url) {
@@ -152,12 +152,41 @@
                 return "Search";
             }
 
+            const CORS_PROXIES = [
+                (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                (url) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+                (url) => `https://cors.eu.org/${url}`,
+            ];
+            let workingProxyIndex = 0;
+
+            function fetchWithTimeout(url, timeoutMs = 5000) {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs);
+                return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+            }
+
+            async function fetchWithProxy(url) {
+                for (let i = workingProxyIndex; i < CORS_PROXIES.length; i++) {
+                    try {
+                        const proxyUrl = CORS_PROXIES[i](url);
+                        console.log(`Trying proxy ${i}: ${proxyUrl}`);
+                        const resp = await fetchWithTimeout(proxyUrl);
+                        if (resp.ok) {
+                            workingProxyIndex = i;
+                            return resp;
+                        }
+                    } catch (e) {
+                        console.warn(`Proxy ${i} failed, trying next...`, e.message);
+                    }
+                }
+                return null;
+            }
+
             async function fetchProductDetails(sku) {
                 if (!sku) return null;
                 try {
-                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`;
-                    const resp = await fetch(apiUrl);
-                    if (!resp.ok) return null;
+                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`);
+                    if (!resp) return null;
                     const json = await resp.json();
                     return json?.response?.data?.boxDetails?.[0] ?? null;
                 } catch (e) {
@@ -168,9 +197,8 @@
 
             async function fetchAllStores() {
                 try {
-                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/stores`;
-                    const resp = await fetch(apiUrl);
-                    if (!resp.ok) return [];
+                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/stores`);
+                    if (!resp) return [];
                     const json = await resp.json();
                     const stores = json?.response?.data?.stores ?? [];
                     return stores.sort((a, b) =>
@@ -194,9 +222,8 @@
                         lon = -1.13534;
                     }
 
-                    const apiUrl = `https://cors.eu.org/https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`;
-                    const resp = await fetch(apiUrl);
-                    if (!resp.ok) return null;
+                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`);
+                    if (!resp) return null;
                     const json = await resp.json();
                     return json?.response?.data?.nearestStores ?? [];
                 } catch (e) {
