@@ -152,31 +152,72 @@
                 return "Search";
             }
 
-            const CORS_PROXIES = [
-                (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                (url) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
-                (url) => `https://cors.eu.org/${url}`,
-            ];
-            let workingProxyIndex = 0;
+            // Paste your Cloudflare Worker URL here (e.g. "https://cex-proxy.yourname.workers.dev")
+            const PRIMARY_PROXY = "https://cex-proxy.raul-blideran98.workers.dev";
 
-            function fetchWithTimeout(url, timeoutMs = 5000) {
+            const CORS_PROXIES = [
+                ...(PRIMARY_PROXY
+                    ? [{ url: (url) => `${PRIMARY_PROXY}/?url=${encodeURIComponent(url)}`, timeout: 10000 }]
+                    : []),
+                { url: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, timeout: 15000 },
+                { url: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`, timeout: 8000 },
+                { url: (url) => `https://api.cors.lol/?url=${encodeURIComponent(url)}`, timeout: 8000 },
+                { url: (url) => `https://cors.eu.org/${url}`, timeout: 8000 },
+            ];
+
+            const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+            function getCached(key) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) return null;
+                    const { ts, data } = JSON.parse(raw);
+                    if (Date.now() - ts > CACHE_TTL_MS) return null;
+                    return data;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function setCached(key, data) {
+                try {
+                    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+                } catch (e) {
+                    // Quota exceeded or disabled - skip
+                }
+            }
+
+            function fetchWithTimeout(url, timeoutMs) {
                 const controller = new AbortController();
                 const timer = setTimeout(() => controller.abort(), timeoutMs);
                 return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
             }
 
-            async function fetchWithProxy(url) {
-                for (let i = workingProxyIndex; i < CORS_PROXIES.length; i++) {
-                    try {
-                        const proxyUrl = CORS_PROXIES[i](url);
-                        console.log(`Trying proxy ${i}: ${proxyUrl}`);
-                        const resp = await fetchWithTimeout(proxyUrl);
-                        if (resp.ok) {
-                            workingProxyIndex = i;
-                            return resp;
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            async function fetchJsonWithProxy(url, attempts = 2) {
+                for (let attempt = 0; attempt < attempts; attempt++) {
+                    for (let i = 0; i < CORS_PROXIES.length; i++) {
+                        const { url: proxyFn, timeout } = CORS_PROXIES[i];
+                        try {
+                            const resp = await fetchWithTimeout(proxyFn(url), timeout);
+                            if (resp.ok) {
+                                const text = await resp.text();
+                                if (text.trim().startsWith("<")) {
+                                    console.warn(`Proxy ${i} returned HTML, skipping`);
+                                    continue;
+                                }
+                                return JSON.parse(text);
+                            }
+                            if (resp.status === 429) {
+                                console.warn(`Proxy ${i} rate-limited`);
+                            }
+                        } catch (e) {
+                            console.warn(`Proxy ${i} failed:`, e.message);
                         }
-                    } catch (e) {
-                        console.warn(`Proxy ${i} failed, trying next...`, e.message);
+                    }
+                    if (attempt < attempts - 1) {
+                        await sleep(500 + Math.random() * 1000);
                     }
                 }
                 return null;
@@ -184,56 +225,49 @@
 
             async function fetchProductDetails(sku) {
                 if (!sku) return null;
-                try {
-                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`);
-                    if (!resp) return null;
-                    const json = await resp.json();
-                    return json?.response?.data?.boxDetails?.[0] ?? null;
-                } catch (e) {
-                    console.error("Error fetching details for SKU", sku, e);
-                    return null;
-                }
+                const cacheKey = `cex_detail_${sku}`;
+                const cached = getCached(cacheKey);
+                if (cached) return cached;
+
+                const json = await fetchJsonWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/detail`);
+                const detail = json?.response?.data?.boxDetails?.[0] ?? null;
+                if (detail) setCached(cacheKey, detail);
+                return detail;
             }
 
             async function fetchAllStores() {
-                try {
-                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/stores`);
-                    if (!resp) return [];
-                    const json = await resp.json();
-                    const stores = json?.response?.data?.stores ?? [];
-                    return stores.sort((a, b) =>
-                        a.storeName.localeCompare(b.storeName),
-                    );
-                } catch (e) {
-                    console.error("Error fetching stores", e);
-                    return [];
-                }
+                const cacheKey = `cex_stores`;
+                const cached = getCached(cacheKey);
+                if (cached) return cached;
+
+                const json = await fetchJsonWithProxy(`https://wss2.cex.uk.webuy.io/v3/stores`);
+                const stores = json?.response?.data?.stores ?? [];
+                const sorted = stores.sort((a, b) =>
+                    a.storeName.localeCompare(b.storeName),
+                );
+                if (sorted.length) setCached(cacheKey, sorted);
+                return sorted;
             }
 
             async function fetchNearestStores(sku) {
                 if (!sku) return null;
-                try {
-                    let lat, lon;
-                    if (selectedStore) {
-                        lat = selectedStore.latitude;
-                        lon = selectedStore.longitude;
-                    } else {
-                        lat = 53.52228;
-                        lon = -1.13534;
-                    }
-
-                    const resp = await fetchWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`);
-                    if (!resp) return null;
-                    const json = await resp.json();
-                    return json?.response?.data?.nearestStores ?? [];
-                } catch (e) {
-                    console.error(
-                        "Error fetching nearest stores for SKU",
-                        sku,
-                        e,
-                    );
-                    return [];
+                let lat, lon;
+                if (selectedStore) {
+                    lat = selectedStore.latitude;
+                    lon = selectedStore.longitude;
+                } else {
+                    lat = 53.52228;
+                    lon = -1.13534;
                 }
+
+                const cacheKey = `cex_nearest_${sku}_${lat}_${lon}`;
+                const cached = getCached(cacheKey);
+                if (cached) return cached;
+
+                const json = await fetchJsonWithProxy(`https://wss2.cex.uk.webuy.io/v3/boxes/${sku}/neareststores?latitude=${lat}&longitude=${lon}`);
+                const stores = json?.response?.data?.nearestStores ?? [];
+                if (stores.length) setCached(cacheKey, stores);
+                return stores;
             }
 
             function getLocationName() {
