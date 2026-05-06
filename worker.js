@@ -2,7 +2,7 @@
 // Deploy at https://workers.cloudflare.com/ (free tier is plenty)
 // Then put your worker URL in CORS_PROXIES in index.html
 
-const ALLOWED_HOST = "wss2.cex.uk.webuy.io";
+const ALLOWED_HOSTS = ["wss2.cex.uk.webuy.io", "docs.google.com"];
 
 export default {
     async fetch(request) {
@@ -30,7 +30,7 @@ export default {
             return new Response("Invalid URL", { status: 400, headers: corsHeaders });
         }
 
-        if (targetUrl.host !== ALLOWED_HOST) {
+        if (!ALLOWED_HOSTS.includes(targetUrl.host)) {
             return new Response("Host not allowed", { status: 403, headers: corsHeaders });
         }
 
